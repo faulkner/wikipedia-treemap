@@ -18,16 +18,13 @@ class hash(dict):
 def node(name, children):
     return {'name': name, 'children': children}
 
-def is_mobile(major, minor):
+def is_mobile(agent):
     # TODO: this list is incomplete
-    agents = ['Android', 'BlackBerry', 'Windows CE', 'DoCoMo', 'iPad', 'iPod', 'Tablet on Android', 'iPhone', 'HipTop', 'Kindle', 'LGE', 'Linux arm',
-              'Mobile', 'MIDP', 'NetFront', 'Nintendo', 'Nokia', 'Obigo', 'Opera Mini', 'Opera Mobi', 'Palm Pre',
+    agents = ['Android', 'BlackBerry', 'RIM', 'Windows CE', 'DoCoMo', 'Apple iPad', 'Apple iPod', 'Tablet on Android', 'Apple iPhone', 'HipTop', 'Kindle', 'LGE', 'Linux arm',
+              'Mobile', 'MIDP', 'NetFront', 'Nintendo', 'Nokia', 'Obigo', 'Opera Mini', 'Opera Mobi', 'Palm Pre', 'Opera Tablet on Android', 'HTC', 'Alcatel', 'LG', 'Motorola',
               'Playstation', 'Samsung', 'SoftBank', 'SonyEricsson', 'SymbianOS', 'UP.Browser', 'Vodafone', 'WAP', 'webOS', 'Wikiamo', 'Wikipanion']
 
-    if major and any(filter(lambda k: major.startswith(k), agents)):
-        return True
-
-    if minor and any(filter(lambda k: minor.startswith(k), agents)):
+    if agent.strip() and any(filter(lambda k: agent.startswith(k), agents)):
         return True
 
     return False
@@ -68,7 +65,7 @@ class Tree(object):
 
         data = []
         for d in self.data:
-            if is_mobile(d['major'], d['minor']):
+            if is_mobile(d['name']):
                 data.append(d)
 
         for d in self.sum_group(data, 'name'):
@@ -86,7 +83,7 @@ class Tree(object):
 
         data = []
         for d in self.data:
-            if not is_mobile(d['major'], d['minor']):
+            if not is_mobile(d['name']):
                 data.append(d)
 
         for d in self.sum_group(data, 'name'):
@@ -114,7 +111,7 @@ class Tree(object):
         for d in self.sum_group(self.data, 'name'):
             key = '%s %s' % (d['country'], d['name'])
             child = {'name': '%s: %s' % (d['name'], d['country']),
-                 'size': d['size']}
+                     'size': d['size']}
             grouped[key].append(child)
 
         children = [node(name, data) for name, data in grouped.items()]
