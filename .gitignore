@@ -3,3 +3,4 @@ env/
 configs/settings.py
 public/assets/js/treemap.js
 data/*.json
+data/*.tsv

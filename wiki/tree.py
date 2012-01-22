@@ -144,20 +144,11 @@ class Tree(object):
         children = [node(name, data) for name, data in grouped.items()]
         return node('wiki', children)
 
-    def group_by_mobile(self, data=None):
+    def group_by_mobile(self):
         """group by type of browser (mobile vs non-mobile)"""
-        if not data:
-            data = self.data
-        grouped = {'mobile': [], 'non-mobile': []}
-        for d in self.sum_group(self.data, 'name'):
-            if is_mobile(d['major'], d['minor']):
-                grouped['mobile'].append(d)
-            else:
-                grouped['non-mobile'].append(d)
-
         return node('wiki', [
-            node('mobile', grouped['mobile']),
-            node('non-mobile', grouped['non-mobile'])])
+            node('mobile', self.mobile()['children']),
+            node('non-mobile', self.nonmobile()['children'])])
 
     def fake(self):
         """sometimes you just need some fixture data"""
