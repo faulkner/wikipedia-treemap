@@ -25,7 +25,7 @@ $('.buttons').hide()
           .attr('class', 'cell')
           .style('background', (d) -> if d.children then window.color(d.name) else null)
           .call(cell)
-          .text((d) -> if d.children then null else d.name + ' (' + d.size + ')')
+          .text((d) -> d.name + ' (' + Math.round(100 * d.size / json.value) + '% : ' + d.size + ')' if not d.children)
 
       d3.select('#size').on 'click', () ->
         div.selectAll('div')
