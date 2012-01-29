@@ -24,7 +24,6 @@ scripts/generate.py
 - gut the rest of backbone-boilerplate (was testing it out, but don't need 90% of it)
 - add endpoints to lookup existing data sources & chart types (these are hard-coded in the template right now)
 - fix nested grouping issues
-- caching of generated treemap JSON
 - split out model details for phones that include it (ex: RIM BlackBerry 123)
 - make data handler more generic
 - port backbone code to coffeescript
