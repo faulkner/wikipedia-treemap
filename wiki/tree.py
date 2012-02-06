@@ -18,11 +18,28 @@ class hash(dict):
 def node(name, children):
     return {'name': name, 'children': children}
 
+def leaf(d):
+    return {'name': d['name'], 'size': d['size']}
+
+def group_by(data, field):
+    grouped = defaultdict(list)
+    for d in data:
+        key = d[field]
+        grouped[key].append(d)
+
+    return grouped
+
+def sum_group(data, field):
+    for k, v in group_by(data, field).items():
+        entry = v[0]
+        entry['size'] = sum([k['size'] for k in v])
+        yield entry
+
 def is_mobile(agent):
     # TODO: this list is incomplete
-    agents = ['Android', 'BlackBerry', 'RIM', 'Windows CE', 'DoCoMo', 'Apple iPad', 'Apple iPod', 'Tablet on Android', 'Apple iPhone', 'HipTop', 'Kindle', 'LGE', 'Linux arm',
+    agents = ['Android', 'Apple', 'BlackBerry', 'RIM', 'Windows CE', 'DoCoMo', 'Apple iPad', 'Apple iPod', 'Tablet on Android', 'Apple iPhone', 'HipTop', 'Kindle', 'LGE', 'Linux arm',
               'Mobile', 'MIDP', 'NetFront', 'Nintendo', 'Nokia', 'Obigo', 'Opera Mini', 'Opera Mobi', 'Palm Pre', 'Opera Tablet on Android', 'HTC', 'Alcatel', 'LG', 'Motorola',
-              'Playstation', 'Samsung', 'SoftBank', 'SonyEricsson', 'SymbianOS', 'UP.Browser', 'Vodafone', 'WAP', 'webOS', 'Wikiamo', 'Wikipanion']
+              'Playstation', 'Samsung', 'SoftBank', 'SonyEricsson', 'SymbianOS', 'UP.Browser', 'Vodafone', 'WAP', 'webOS', 'Wikiamo', 'Wikipanion', 'MyPhone', 'VODAFONE', 'Palm']
 
     if agent.strip() and any(filter(lambda k: agent.startswith(k), agents)):
         return True
@@ -33,46 +50,18 @@ class Tree(object):
     def __init__(self, data):
         self.data = data
 
-    def _leaf(self, d):
-        return {'name': d['name'], 'size': d['size']}
-
-    def group_by(self, data, field):
-        grouped = defaultdict(list)
-        for d in data:
-            key = d[field]
-            grouped[key].append(d)
-
-        return grouped
-
-    def sum_group(self, data, field):
-        grouped = self.group_by(data, field)
-
-        summed_groups = []
-        for k, v in grouped.items():
-            entry = v[0]
-            entry['size'] = sum([k['size'] for k in v])
-            summed_groups.append(entry)
-
-        return summed_groups
-
     def flat(self):
         """no nesting at all - one record per cell"""
-        return node('wiki', [self._leaf(d) for d in self.data])
+        return node('wiki', [leaf(d) for d in self.data])
 
     def mobile(self):
         """only mobile"""
         grouped = defaultdict(list)
 
-        data = []
-        for d in self.data:
-            if is_mobile(d['name']):
-                data.append(d)
+        data = filter(lambda k: is_mobile(k['name']), self.data)
 
-        for d in self.sum_group(data, 'name'):
-            key = '%s' % (d['major'])
-            child = {'name': '%s' % (d['name']),
-                     'size': d['size']}
-            grouped[key].append(child)
+        for d in sum_group(data, 'name'):
+            grouped[d['major']].append(leaf(d))
 
         children = [node(name, data) for name, data in grouped.items()]
         return node('wiki', children)
@@ -81,34 +70,26 @@ class Tree(object):
         """only non-mobile"""
         grouped = defaultdict(list)
 
-        data = []
-        for d in self.data:
-            if not is_mobile(d['name']):
-                data.append(d)
+        data = filter(lambda k: not is_mobile(k['name']), self.data)
 
-        for d in self.sum_group(data, 'name'):
-            key = '%s' % (d['major'])
-            child = {'name': '%s' % (d['name']),
-                     'size': d['size']}
-            grouped[key].append(child)
+        for d in sum_group(data, 'name'):
+            grouped[d['major']].append(leaf(d))
 
         children = [node(name, data) for name, data in grouped.items()]
         return node('wiki', children)
 
     def country(self):
         """group by country"""
-        result = node('wiki', [])
         for d in self.data:
             d['name'] = d['country']
 
-        for d in self.sum_group(self.data, 'name'):
-            result['children'].append(self._leaf(d))
-        return result
+        children = [leaf(d) for d in sum_group(self.data, 'name')]
+        return node('wiki', children)
 
     def country_browser(self):
         """group by country, then by browser"""
         grouped = defaultdict(list)
-        for d in self.sum_group(self.data, 'name'):
+        for d in sum_group(self.data, 'name'):
             key = '%s %s' % (d['country'], d['name'])
             child = {'name': '%s: %s' % (d['name'], d['country']),
                      'size': d['size']}
@@ -120,7 +101,7 @@ class Tree(object):
     def browser_country(self):
         """group by browser, then by country"""
         grouped = defaultdict(list)
-        for d in self.sum_group(self.data, 'country'):
+        for d in sum_group(self.data, 'country'):
             key = '%s %s' % (d['name'], d['country'])
             child = {'name': '%s: %s' % (d['name'], d['country']),
                      'size': d['size']}
@@ -132,7 +113,7 @@ class Tree(object):
     def browser_language(self):
         """group by browser, then by language (probably not super-interesting)"""
         grouped = defaultdict(list)
-        for d in self.sum_group(self.data, 'lang'):
+        for d in sum_group(self.data, 'lang'):
             key = '%s %s %s' % (d['major'], d['minor'], d['lang'])
             child = {'name': '%s: %s' % (d['name'], d['lang']),
                     'size': d['size']}

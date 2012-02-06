@@ -9,6 +9,10 @@ def get_js(filename):
         for j in js:
             j['name'] = '(unknown)' if not j['major'] else '%s %s' % (j['major'], j['minor'])
 
+            # trim down name
+            if ' ' in j['name']:
+                j['name'], j['model'] = j['name'].split(' ', 1)
+
         return js
 
 class DataHandler(BaseHandler):
